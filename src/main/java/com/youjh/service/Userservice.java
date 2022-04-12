@@ -1,13 +1,10 @@
 package com.youjh.service;
 
-import com.writespring.Autowired;
-import com.writespring.BeanNameAware;
-import com.writespring.Component;
-import com.writespring.Scope;
+import com.writespring.*;
 
 @Component("userService")
 @Scope("prototype")
-public class Userservice implements BeanNameAware {
+public class Userservice implements InitializingBean {
 
     @Autowired
     private OrderService orderService;
@@ -20,9 +17,13 @@ public class Userservice implements BeanNameAware {
         System.out.println(beanName);
     }
 
-    @Override
     public void setBeanName(String name) {
         beanName = name;
 
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        System.out.println("初始化操作");
     }
 }
