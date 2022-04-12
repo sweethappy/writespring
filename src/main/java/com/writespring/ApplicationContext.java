@@ -48,10 +48,19 @@ public class ApplicationContext {
                 }
            }
 
+           //aware回调
            if(instance instanceof  BeanNameAware){
                ((BeanNameAware) instance).setBeanName(beanName);
            }
 
+           //初始化
+            if(instance instanceof InitializingBean){
+                try {
+                    ((InitializingBean) instance).afterPropertiesSet();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
 
 
