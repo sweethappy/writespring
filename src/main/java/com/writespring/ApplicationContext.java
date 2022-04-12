@@ -7,6 +7,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,6 +18,8 @@ public class ApplicationContext {
 
     private ConcurrentHashMap<String,Object> singletonObjects = new ConcurrentHashMap<>(); //单例池
     private ConcurrentHashMap<String,BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(); //beanDefinition
+    private List<BeanPostProcessor> beanPostProcessorArrayList = new ArrayList<>();
+
 
     public ApplicationContext(Class configClass){
 
@@ -53,6 +57,12 @@ public class ApplicationContext {
                ((BeanNameAware) instance).setBeanName(beanName);
            }
 
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorArrayList) {
+                instance = beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
+            }
+
+
+
            //初始化
             if(instance instanceof InitializingBean){
                 try {
@@ -62,7 +72,9 @@ public class ApplicationContext {
                 }
             }
 
-
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorArrayList) {
+                instance = beanPostProcessor.postProcessAfterInitialization(instance, beanName);
+            }
 
 
             return instance;
@@ -102,6 +114,13 @@ public class ApplicationContext {
                         if(aClass.isAnnotationPresent(Component.class)){
                             //表示当前这个类是一个Bean
                             // 解析类=>BeanDefinition
+                            if (BeanPostProcessor.class.isAssignableFrom(aClass)) {
+                                BeanPostProcessor beanPostProcessor = (BeanPostProcessor) aClass.getDeclaredConstructor().newInstance();
+                                beanPostProcessorArrayList.add(beanPostProcessor);
+                            }
+                            
+
+
                             Component componentAnnotation = aClass.getDeclaredAnnotation(Component.class);
                             String beanname = componentAnnotation.value();
                             BeanDefinition beanDefinition = new BeanDefinition();
@@ -116,7 +135,13 @@ public class ApplicationContext {
 
                             beanDefinitionMap.put(beanname,beanDefinition);
                         }
-                    } catch (ClassNotFoundException e) {
+                    } catch (ClassNotFoundException | NoSuchMethodException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InstantiationException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
                         e.printStackTrace();
                     }
                 }

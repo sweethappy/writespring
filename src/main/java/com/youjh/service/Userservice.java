@@ -11,6 +11,10 @@ public class Userservice implements InitializingBean {
 
     private String beanName;
 
+    public String getBeanName() {
+        return beanName;
+    }
+
     public void test(){
 
         System.out.println(orderService);
