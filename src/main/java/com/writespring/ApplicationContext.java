@@ -57,10 +57,11 @@ public class ApplicationContext {
                ((BeanNameAware) instance).setBeanName(beanName);
            }
 
+
+           //初始化前的后置处理器
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorArrayList) {
                 instance = beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
             }
-
 
 
            //初始化
@@ -71,7 +72,7 @@ public class ApplicationContext {
                     e.printStackTrace();
                 }
             }
-
+            //初始化后的后置处理器
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorArrayList) {
                 instance = beanPostProcessor.postProcessAfterInitialization(instance, beanName);
             }
@@ -94,7 +95,7 @@ public class ApplicationContext {
         ComponentScan componentScan =(ComponentScan) configClass.getDeclaredAnnotation(ComponentScan.class);
         String path= componentScan.value();
         path=path.replace(".","/");
-        System.out.println(path);
+        System.out.println("service路径： "+path);
 
         //扫描
         //类加载器 ： BootStrap，Ext，App => classpath
@@ -108,12 +109,14 @@ public class ApplicationContext {
                 if (absolutePath.endsWith(".class")) {
                     String className = absolutePath.substring(absolutePath.indexOf("com"), absolutePath.indexOf(".class"));
                     String s = className.replace("\\", ".");
-                    System.out.println(s);
+                    System.out.println("service包下的类"+s);
                     try {
+                        //使用类加载器加载类
                         Class<?> aClass = classLoader.loadClass(s);
                         if(aClass.isAnnotationPresent(Component.class)){
                             //表示当前这个类是一个Bean
                             // 解析类=>BeanDefinition
+
                             if (BeanPostProcessor.class.isAssignableFrom(aClass)) {
                                 BeanPostProcessor beanPostProcessor = (BeanPostProcessor) aClass.getDeclaredConstructor().newInstance();
                                 beanPostProcessorArrayList.add(beanPostProcessor);
@@ -125,6 +128,7 @@ public class ApplicationContext {
                             String beanname = componentAnnotation.value();
                             BeanDefinition beanDefinition = new BeanDefinition();
                             beanDefinition.setClazz(aClass);
+                            //判断是否是单例
                             if(aClass.isAnnotationPresent(Scope.class)){
                                 Scope scopeAnnotation = aClass.getDeclaredAnnotation(Scope.class);
                                 beanDefinition.setScope(scopeAnnotation.value());
