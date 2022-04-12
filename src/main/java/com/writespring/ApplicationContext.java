@@ -28,13 +28,13 @@ public class ApplicationContext {
             String beanname = entry.getKey();
             BeanDefinition beanDefinition = entry.getValue();
             if(beanDefinition.getScope().equals("singleton")){
-                Object bean = createBean(beanDefinition);
+                Object bean = createBean(beanname,beanDefinition);
                 singletonObjects.put(beanname,bean);
             }
         }
     }
 
-    public Object createBean(BeanDefinition beanDefinition) {
+    public Object createBean(String beanName,BeanDefinition beanDefinition) {
         Class clazz = beanDefinition.getClazz();
         try {
             Object instance = clazz.getDeclaredConstructor().newInstance();
@@ -46,6 +46,10 @@ public class ApplicationContext {
                     declaredField.setAccessible(true);
                     declaredField.set(instance,bean);
                 }
+           }
+
+           if(instance instanceof  BeanNameAware){
+               ((BeanNameAware) instance).setBeanName(beanName);
            }
 
 
@@ -120,7 +124,7 @@ public class ApplicationContext {
                 return o;
             }
             else {
-                Object bean = createBean(beanDefinition);
+                Object bean = createBean(beanName,beanDefinition);
                 return bean;
             }
         }
